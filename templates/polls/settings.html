@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Einstellungen{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-8">
+        <a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-900">Benutzereinstellungen</h1>
+    </div>
+
+    <!-- Account info -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+        <h2 class="text-base font-semibold text-gray-900 mb-4">Konto</h2>
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white text-lg font-bold">
+                {{ request.user.get_full_name|default:request.user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <p class="font-medium text-gray-900">{{ request.user.get_full_name|default:request.user.username }}</p>
+                <p class="text-sm text-gray-500">{{ request.user.email }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">Mitglied seit {{ request.user.date_joined|date:"d.m.Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teams integration -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                </div>
+                <h2 class="text-base font-semibold text-gray-900">Microsoft Teams Integration</h2>
+            </div>
+            {% if teams_settings and teams_settings.is_configured %}
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
+                Konfiguriert
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-full">
+                Nicht konfiguriert
+            </span>
+            {% endif %}
+        </div>
+
+        <div class="p-6">
+            <!-- Info box -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 class="text-sm font-semibold text-blue-800 mb-2">Azure AD App-Registrierung erforderlich</h3>
+                <ol class="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                    <li>Öffnen Sie das <a href="https://portal.azure.com" target="_blank" class="underline">Azure Portal</a></li>
+                    <li>Navigieren Sie zu "Azure Active Directory" &rarr; "App-Registrierungen"</li>
+                    <li>Erstellen Sie eine neue App-Registrierung</li>
+                    <li>Fügen Sie die API-Berechtigung "Calendars.ReadWrite" (delegiert) hinzu</li>
+                    <li>Erstellen Sie ein Client-Secret unter "Zertifikate &amp; Geheimnisse"</li>
+                    <li>Kopieren Sie Tenant-ID, Client-ID und Secret hierher</li>
+                </ol>
+            </div>
+
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+
+                <div>
+                    <label for="{{ form.tenant_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Tenant ID (Directory ID)
+                    </label>
+                    {{ form.tenant_id }}
+                    {% if form.tenant_id.errors %}
+                    <p class="mt-1 text-xs text-red-600">{{ form.tenant_id.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.client_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Client ID (Application ID)
+                    </label>
+                    {{ form.client_id }}
+                    {% if form.client_id.errors %}
+                    <p class="mt-1 text-xs text-red-600">{{ form.client_id.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.client_secret.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Client Secret
+                        {% if teams_settings and teams_settings.client_secret %}
+                        <span class="text-xs text-green-600 ml-1">(gespeichert)</span>
+                        {% endif %}
+                    </label>
+                    <input type="password" name="client_secret" id="id_client_secret"
+                           class="block w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm
+                                  text-gray-900 placeholder-gray-400
+                                  focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                           placeholder="{% if teams_settings and teams_settings.client_secret %}••••••••{% else %}Ihr Client Secret{% endif %}">
+                    {% if form.client_secret.errors %}
+                    <p class="mt-1 text-xs text-red-600">{{ form.client_secret.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-gray-400 mt-1">Leer lassen um bestehendes Secret beizubehalten.</p>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit"
+                            class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        Einstellungen speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

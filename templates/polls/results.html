@@ -1,0 +1,411 @@
+{% extends 'base.html' %}
+{% load static poll_filters %}
+
+{% block title %}Ergebnisse - {{ poll.title }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-xl font-bold text-gray-900">{{ poll.title }}</h1>
+                <span class="status-badge {% if poll.status == 'active' %}status-active{% elif poll.status == 'closed' %}status-closed{% else %}status-draft{% endif %}">
+                    {{ poll.get_status_display }}
+                </span>
+            </div>
+            <!-- Live indicator -->
+            <div class="flex items-center gap-2 ml-8">
+                <div id="liveIndicator" class="w-2 h-2 rounded-full bg-gray-300"></div>
+                <span id="liveText" class="text-xs text-gray-400">Verbinde...</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'poll_export_excel' poll.id %}"
+               class="btn-secondary text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Excel Export
+            </a>
+            <a href="{% url 'poll_editor' poll.id %}" class="btn-secondary text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Editor
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+            <div id="statTotal" class="text-3xl font-bold text-brand-600">{{ results.total_responses }}</div>
+            <div class="text-xs text-gray-500 mt-1 font-medium">Gesamt-Antworten</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+            <div class="flex items-center justify-center text-gray-700" style="height:2.25rem">
+                {% if poll.questions_per_page %}
+                <span class="text-3xl font-bold">{{ poll.questions_per_page }}</span>
+                {% else %}
+                <!-- Infinity SVG -->
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 12c-2-2.5-4-4-6-4a4 4 0 000 8c2 0 4-1.5 6-4zm0 0c2 2.5 4 4 6 4a4 4 0 000-8c-2 0-4 1.5-6 4z"/>
+                </svg>
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-500 mt-1 font-medium">Fragen/Seite</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+            <div class="text-3xl font-bold text-gray-700">{{ results.questions|length }}</div>
+            <div class="text-xs text-gray-500 mt-1 font-medium">Fragen</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+            <div class="flex items-center justify-center" style="height:2.25rem">
+                {% if poll.is_anonymous %}
+                <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                {% else %}
+                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-500 mt-1 font-medium">Anonym</div>
+        </div>
+    </div>
+
+    <!-- Questions -->
+    <div id="resultsContainer" class="space-y-6">
+        {% for q_stat in results.questions %}
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden animate__animated animate__fadeInUp"
+             data-question-id="{{ q_stat.question_id }}"
+             data-question-type="{{ q_stat.question_type }}">
+
+            <div class="px-6 py-4 border-b border-gray-100">
+                <div class="flex items-start justify-between gap-3">
+                    <h3 class="font-semibold text-gray-900">{{ q_stat.title }}</h3>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                            {{ q_stat.answer_count }} Antwort{% if q_stat.answer_count != 1 %}en{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-5">
+                {% if q_stat.question_type in 'single_choice,multiple_choice' %}
+                <!-- Bar chart for choice questions -->
+                <div class="h-48">
+                    <canvas id="chart_{{ q_stat.question_id }}"
+                            data-type="bar"
+                            data-labels='{% for o in q_stat.options %}{{ o.text }}{% if not forloop.last %}|{% endif %}{% endfor %}'
+                            data-values='{% for o in q_stat.options %}{{ o.count }}{% if not forloop.last %},{% endif %}{% endfor %}'></canvas>
+                </div>
+                <!-- Option breakdown -->
+                <div class="mt-4 space-y-2">
+                    {% for option in q_stat.options %}
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-gray-600 w-1/3 truncate" title="{{ option.text }}">{{ option.text }}</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-2">
+                            <div class="bg-brand-600 h-2 rounded-full transition-all duration-500"
+                                 style="width: {% if q_stat.answer_count > 0 %}{% widthratio option.count q_stat.answer_count 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700 w-8 text-right">{{ option.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% elif q_stat.question_type == 'rating' %}
+                <!-- Rating distribution -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="text-4xl font-bold text-brand-600">
+                        {% if q_stat.average %}{{ q_stat.average }}{% else %}&mdash;{% endif %}
+                    </div>
+                    <div class="text-sm text-gray-500">Durchschnitt</div>
+                </div>
+                <div class="h-40">
+                    <canvas id="chart_{{ q_stat.question_id }}"
+                            data-type="bar"
+                            data-labels='{% for d in q_stat.distribution %}{{ d.value }}{% if not forloop.last %}|{% endif %}{% endfor %}'
+                            data-values='{% for d in q_stat.distribution %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}'></canvas>
+                </div>
+
+                {% elif q_stat.question_type in 'text,textarea,date' %}
+                <!-- Text / date responses -->
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                    {% if q_stat.responses %}
+                    {% for resp in q_stat.responses %}
+                    <div class="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-100">
+                        {{ resp }}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-sm text-gray-400 italic">Noch keine Antworten</p>
+                    {% endif %}
+                </div>
+
+                {% elif q_stat.question_type == 'ranking' %}
+                <!-- Average rank chart -->
+                <div class="h-40">
+                    <canvas id="chart_{{ q_stat.question_id }}"
+                            data-type="bar"
+                            data-labels='{% for o in q_stat.options %}{{ o.text }}{% if not forloop.last %}|{% endif %}{% endfor %}'
+                            data-values='{% for o in q_stat.options %}{% if o.average_rank %}{{ o.average_rank }}{% else %}0{% endif %}{% if not forloop.last %},{% endif %}{% endfor %}'></canvas>
+                </div>
+
+                {% elif q_stat.question_type == 'matrix' %}
+                <!-- Matrix heatmap -->
+                <div class="overflow-x-auto"
+                     data-matrix="{{ q_stat.matrix|json_encode }}"
+                     id="matrixContainer_{{ q_stat.question_id }}">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="py-2 px-3 text-left font-medium text-gray-500 text-xs"></th>
+                                {% for col in q_stat.columns %}
+                                <th class="py-2 px-3 text-center font-medium text-gray-600 text-xs">{{ col.text }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in q_stat.rows %}
+                            <tr class="border-t border-gray-100">
+                                <td class="py-2 px-3 font-medium text-gray-700 text-sm">{{ row.text }}</td>
+                                {% for col in q_stat.columns %}
+                                <td class="py-2 px-3 text-center"
+                                    data-row="{{ row.id }}" data-col="{{ col.id }}">
+                                    <span class="matrix-cell text-sm font-semibold text-brand-600">0</span>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% elif q_stat.question_type == 'number' %}
+                <!-- Number stats -->
+                <div class="flex items-center gap-4">
+                    <div>
+                        <div class="text-3xl font-bold text-brand-600">
+                            {% if q_stat.average %}{{ q_stat.average }}{% else %}&mdash;{% endif %}
+                        </div>
+                        <div class="text-xs text-gray-500">Durchschnitt</div>
+                    </div>
+                </div>
+
+                {% elif q_stat.question_type == 'file' %}
+                <!-- File uploads as clickable cards -->
+                <div class="flex flex-wrap gap-3">
+                    {% if q_stat.files %}
+                    {% for f in q_stat.files %}
+                    <a href="{{ f.url }}" target="_blank" rel="noopener"
+                       class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 hover:border-brand-400 hover:bg-brand-50 hover:shadow-sm transition-all group max-w-xs min-w-0">
+                        <div class="flex-shrink-0">
+                            {% if f.file_type == 'pdf' %}
+                            <div class="w-11 h-11 bg-red-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xs font-bold text-red-600">PDF</span>
+                            </div>
+                            {% elif f.file_type == 'excel' %}
+                            <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xs font-bold text-green-600">{{ f.ext }}</span>
+                            </div>
+                            {% elif f.file_type == 'word' %}
+                            <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xs font-bold text-blue-600">{{ f.ext }}</span>
+                            </div>
+                            {% elif f.file_type == 'ppt' %}
+                            <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xs font-bold text-orange-600">{{ f.ext }}</span>
+                            </div>
+                            {% elif f.file_type == 'image' %}
+                            <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xs font-bold text-purple-600">{{ f.ext }}</span>
+                            </div>
+                            {% elif f.file_type == 'archive' %}
+                            <div class="w-11 h-11 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                <span class="text-xs font-bold text-yellow-600">{{ f.ext }}</span>
+                            </div>
+                            {% else %}
+                            <div class="w-11 h-11 bg-gray-200 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-800 truncate group-hover:text-brand-700 max-w-40">{{ f.name }}</p>
+                            <p class="text-xs text-gray-400 group-hover:text-brand-500 transition-colors">Öffnen ↗</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-sm text-gray-400 italic">Noch keine Dateien hochgeladen</p>
+                    {% endif %}
+                </div>
+
+                {% else %}
+                <!-- Generic: answer count -->
+                <p class="text-sm text-gray-500">{{ q_stat.answer_count }} Antworten erhalten</p>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12 text-gray-400">
+            <p class="text-sm">Noch keine Fragen in dieser Umfrage.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Voter list -->
+    <div class="mt-8 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Teilnehmer
+                <span id="voterCountBadge" class="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full ml-1">{{ voter_responses|length }}</span>
+            </h3>
+            <div class="flex items-center gap-3">
+                <!-- Allow multiple responses toggle -->
+                <button id="btnMultipleResponses"
+                        onclick="ResultsApp.toggleMultipleResponses(this)"
+                        data-poll-id="{{ poll.id }}"
+                        data-enabled="{{ poll.allow_multiple_responses|lower }}"
+                        class="flex items-center gap-2 group cursor-pointer">
+                    <div class="relative w-8 h-[18px] rounded-full transition-colors duration-200
+                                {% if poll.allow_multiple_responses %}bg-brand-600{% else %}bg-gray-300{% endif %}"
+                         id="multipleToggleTrack">
+                        <div class="absolute top-[2px] w-[14px] h-[14px] bg-white rounded-full shadow transition-all duration-200
+                                    {% if poll.allow_multiple_responses %}left-[18px]{% else %}left-[2px]{% endif %}"
+                             id="multipleToggleThumb"></div>
+                    </div>
+                    <span class="text-xs text-gray-500 group-hover:text-gray-700 transition-colors select-none">Mehrfach abstimmen</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="voterList" class="divide-y divide-gray-50">
+            {% if voter_responses %}
+            {% for resp in voter_responses %}
+            <div class="px-6 py-3 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors" id="voter_{{ resp.id }}">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
+                        <span class="text-xs font-bold text-brand-600">
+                            {{ resp.user.get_full_name|default:resp.user.username|slice:":1"|upper }}
+                        </span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate">
+                            {{ resp.user.get_full_name|default:resp.user.username }}
+                        </p>
+                        {% if resp.submitted_at %}
+                        <p class="text-xs text-gray-400">{{ resp.submitted_at|date:"d.m.Y, H:i" }} Uhr</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                <a href="{% url 'response_detail' poll.id resp.id %}"
+                   title="Einsendung ansehen"
+                   class="p-1.5 text-gray-300 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-all duration-150">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                </a>
+                <button onclick="ResultsApp.deleteResponse({{ resp.id }}, {{ poll.id }})"
+                        title="Abstimmung löschen"
+                        class="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-150">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="px-6 py-10 text-center">
+                <svg class="w-8 h-8 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p class="text-sm text-gray-400">Noch keine Abstimmungen</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Teams export (if configured) -->
+    {% if teams_configured %}
+    <div class="mt-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+            Microsoft Teams Meeting erstellen
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Titel</label>
+                <input type="text" id="teamsTitle" value="Ergebnisse: {{ poll.title }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Beschreibung</label>
+                <input type="text" id="teamsDesc" value="Besprechung der Umfrageergebnisse"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Startzeit</label>
+                <input type="datetime-local" id="teamsStart"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Endzeit</label>
+                <input type="datetime-local" id="teamsEnd"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+            <button onclick="ResultsApp.createTeamsMeeting()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+                Meeting erstellen
+            </button>
+            <span id="teamsStatus" class="text-sm text-gray-500"></span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const POLL_ID = {{ poll.id }};
+    const RESULTS_DATA_URL = "{% url 'poll_results_data' poll.id %}";
+    const TEAMS_EXPORT_URL = "{% url 'teams_export' poll.id %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+    const INITIAL_RESULTS = {{ results|json_encode }};
+</script>
+<script src="{% static 'js/results.js' %}"></script>
+{% endblock %}

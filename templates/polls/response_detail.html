@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Einsendung {{ current_num }} – {{ poll.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <a href="{% url 'poll_results' poll.id %}" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <p class="text-xs text-gray-400 mb-0.5">{{ poll.title }}</p>
+                    <h1 class="text-xl font-bold text-gray-900">
+                        Einsendung {{ current_num }} von {{ total }}
+                    </h1>
+                </div>
+            </div>
+            <div class="ml-8 flex items-center gap-3 text-xs text-gray-400">
+                {% if response.user %}
+                <div class="flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
+                        <span class="text-[10px] font-bold text-brand-600">
+                            {{ response.user.get_full_name|default:response.user.username|slice:":1"|upper }}
+                        </span>
+                    </div>
+                    <span class="font-medium text-gray-600">{{ response.user.get_full_name|default:response.user.username }}</span>
+                </div>
+                {% endif %}
+                {% if response.submitted_at %}
+                <span>{{ response.submitted_at|date:"d.m.Y, H:i" }} Uhr</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Prev / Next navigation -->
+        <div class="flex items-center gap-2">
+            {% if prev_id %}
+            <a href="{% url 'response_detail' poll.id prev_id %}"
+               class="btn-secondary text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Vorherige
+            </a>
+            {% else %}
+            <span class="btn-secondary text-sm opacity-40 cursor-not-allowed pointer-events-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Vorherige
+            </span>
+            {% endif %}
+
+            {% if next_id %}
+            <a href="{% url 'response_detail' poll.id next_id %}"
+               class="btn-secondary text-sm">
+                Nächste
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            {% else %}
+            <span class="btn-secondary text-sm opacity-40 cursor-not-allowed pointer-events-none">
+                Nächste
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Answers -->
+    <div class="space-y-4">
+        {% for row in answer_rows %}
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <!-- Question header -->
+            <div class="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-start gap-3">
+                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center mt-0.5">
+                    {{ forloop.counter }}
+                </span>
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-gray-800">{{ row.question.title }}</p>
+                    {% if row.question.description %}
+                    <p class="text-xs text-gray-400 mt-0.5">{{ row.question.description }}</p>
+                    {% endif %}
+                </div>
+                <span class="ml-auto flex-shrink-0 text-xs text-gray-400 bg-white border border-gray-200 px-2 py-0.5 rounded-full">
+                    {{ row.question.get_question_type_display }}
+                </span>
+            </div>
+
+            <!-- Answer -->
+            <div class="px-5 py-4">
+                {% if row.formatted is None %}
+                <p class="text-sm text-gray-400 italic">Keine Antwort</p>
+
+                {% elif row.question.question_type == 'single_choice' %}
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full border-2 border-brand-600 flex items-center justify-center flex-shrink-0">
+                        <div class="w-2 h-2 rounded-full bg-brand-600"></div>
+                    </div>
+                    <span class="text-sm text-gray-800">{{ row.formatted }}</span>
+                </div>
+
+                {% elif row.question.question_type == 'multiple_choice' %}
+                <div class="space-y-1.5">
+                    {% for opt in row.formatted %}
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-brand-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-800">{{ opt }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% elif row.question.question_type == 'ranking' %}
+                <ol class="space-y-1.5">
+                    {% for opt in row.formatted %}
+                    <li class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                            {{ forloop.counter }}
+                        </span>
+                        <span class="text-sm text-gray-800">{{ opt }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+
+                {% elif row.question.question_type == 'matrix' %}
+                <div class="overflow-x-auto">
+                    <table class="text-sm w-full">
+                        {% for row_label, col_label in row.formatted.items %}
+                        <tr class="border-b border-gray-50 last:border-0">
+                            <td class="py-1.5 pr-4 font-medium text-gray-700 w-1/2">{{ row_label }}</td>
+                            <td class="py-1.5 text-brand-600 font-medium">{{ col_label }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+
+                {% elif row.question.question_type == 'rating' %}
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl font-bold text-brand-600">{{ row.formatted }}</span>
+                    <div class="flex gap-1">
+                        {% with max_val=row.question.settings.max|default:5 %}
+                        {% for i in "12345"|make_list %}
+                        <div class="w-6 h-6 rounded-full {% if forloop.counter <= row.formatted|add:'0' %}bg-brand-600{% else %}bg-gray-100{% endif %}"></div>
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+                </div>
+
+                {% elif row.question.question_type == 'file' %}
+                {% if row.formatted %}
+                <a href="{{ row.formatted.url }}" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 hover:border-brand-400 hover:bg-brand-50 transition-all group">
+                    <div class="w-10 h-10 bg-brand-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-800 group-hover:text-brand-700">{{ row.formatted.name }}</p>
+                        <p class="text-xs text-gray-400 group-hover:text-brand-500">Öffnen ↗</p>
+                    </div>
+                </a>
+                {% else %}
+                <p class="text-sm text-gray-400 italic">Keine Datei hochgeladen</p>
+                {% endif %}
+
+                {% elif row.question.question_type == 'textarea' %}
+                <p class="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100">{{ row.formatted }}</p>
+
+                {% else %}
+                <p class="text-sm text-gray-800">{{ row.formatted }}</p>
+
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12 text-gray-400 text-sm">Keine Fragen in dieser Umfrage.</div>
+        {% endfor %}
+    </div>
+
+    <!-- Bottom navigation -->
+    <div class="flex items-center justify-between mt-8">
+        {% if prev_id %}
+        <a href="{% url 'response_detail' poll.id prev_id %}" class="btn-secondary text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Vorherige
+        </a>
+        {% else %}<div></div>{% endif %}
+
+        <span class="text-sm text-gray-400">{{ current_num }} / {{ total }}</span>
+
+        {% if next_id %}
+        <a href="{% url 'response_detail' poll.id next_id %}" class="btn-secondary text-sm">
+            Nächste
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+        {% else %}<div></div>{% endif %}
+    </div>
+
+</div>
+{% endblock %}

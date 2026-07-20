@@ -1,0 +1,53 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB:       ${DB_NAME:-safetpoll}
+      POSTGRES_USER:     ${DB_USER:-safetpoll_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muss in .env gesetzt sein}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-safetpoll_user} -d ${DB_NAME:-safetpoll}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_HOST:    db
+      REDIS_HOST: redis
+      MEDIA_ROOT: /app/media
+    volumes:
+      - media_data:/app/media
+    ports:
+      - "${APP_PORT:-8000}:8000"
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:

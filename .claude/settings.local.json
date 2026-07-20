@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"c:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\")",
+      "Bash(ls \"C:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\\\\\")",
+      "Read(//c/Users/nicolas.regel/Documents/**)",
+      "Bash(ls /mnt/c/Users/nicolas.regel/Documents/safeTpoll/ 2>&1 || echo \"Not found\")",
+      "Read(//mnt/c/Users/nicolas.regel/Documents/**)",
+      "Bash(ls /mnt/c/Users/ 2>&1 | head -20)",
+      "Read(//mnt/c/**)",
+      "Bash(mkdir -p config polls/templatetags accounts templates/accounts templates/polls static/css static/js)",
+      "Bash(python3 -c ' *)",
+      "Bash(python -m py_compile config/settings.py config/asgi.py config/urls.py polls/models.py polls/views.py polls/consumers.py polls/forms.py polls/admin.py polls/templatetags/poll_filters.py accounts/views.py)",
+      "Bash(python -m py_compile \"c:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\\\\config\\\\settings.py\")",
+      "Bash(powershell -Command '& { $null = [System.Management.Automation.Language.Parser]::ParseFile\\('\\\\''c:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\\\\setup.ps1'\\\\'', [ref]$null, [ref]$null\\); Write-Host '\\\\''Syntax OK'\\\\'' }')"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\nicolas.regel\\Documents\\safeTpoll"
+    ]
+  }
+}

@@ -1,0 +1,397 @@
+/* ===================================
+   safeTpoll - Custom CSS
+   Complements Tailwind CSS
+   =================================== */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ===================================
+   Button utility classes
+   =================================== */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background-color: #dc2626;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border: none;
+    cursor: pointer;
+}
+.btn-primary:hover {
+    background-color: #b91c1c;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.btn-primary:active {
+    transform: scale(0.99);
+}
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background-color: white;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+}
+.btn-secondary:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    color: #111827;
+}
+.btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.15);
+}
+
+/* ===================================
+   Status badges
+   =================================== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    border-width: 1px;
+}
+.status-draft {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-color: #e5e7eb;
+}
+.status-active {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+.status-closed {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+/* ===================================
+   Editor - Split view
+   =================================== */
+.editor-block {
+    position: relative;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.625rem;
+    background: white;
+    cursor: default;
+    transition: all 0.15s ease;
+}
+.editor-block:hover {
+    border-color: #dc2626;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.editor-block.sortable-chosen {
+    border-color: #dc2626;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    opacity: 0.9;
+}
+.editor-block.sortable-ghost {
+    opacity: 0.3;
+    background: #fef2f2;
+    border-style: dashed;
+    border-color: #dc2626;
+}
+
+.drag-handle {
+    cursor: grab;
+    color: #9ca3af;
+    transition: color 0.15s;
+}
+.drag-handle:hover {
+    color: #6b7280;
+}
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* ===================================
+   Question type button in dropdown
+   =================================== */
+.question-type-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8125rem;
+    color: #374151;
+    transition: all 0.1s;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.question-type-btn:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+/* ===================================
+   Preview panel
+   =================================== */
+.preview-text-block {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+.preview-text-block h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #111827; }
+.preview-text-block h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1f2937; }
+.preview-text-block h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.375rem; color: #374151; }
+.preview-text-block p { margin-bottom: 0.5rem; color: #4b5563; font-size: 0.9rem; line-height: 1.6; }
+.preview-text-block strong { font-weight: 600; color: #111827; }
+.preview-text-block em { font-style: italic; }
+.preview-text-block ul, .preview-text-block ol { padding-left: 1.25rem; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.9rem; }
+.preview-text-block li { margin-bottom: 0.25rem; }
+
+.preview-question-block {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+.preview-question-title {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.9375rem;
+    margin-bottom: 0.875rem;
+}
+.preview-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 0.375rem;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: not-allowed;
+    background: #fafafa;
+}
+
+/* ===================================
+   Star rating widget
+   =================================== */
+.star {
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+    transition: transform 0.1s ease, color 0.15s ease;
+    color: #d1d5db;
+    display: inline-block;
+}
+.star:hover,
+.star.active {
+    color: #dc2626;
+    transform: scale(1.15);
+}
+.star svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+/* Rating numbers (for scale type) */
+.rating-number {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #374151;
+}
+.rating-number:hover,
+.rating-number.active {
+    border-color: #dc2626;
+    background-color: #dc2626;
+    color: white;
+}
+
+/* ===================================
+   Ranking drag & drop
+   =================================== */
+.ranking-item {
+    user-select: none;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+.ranking-item.sortable-chosen {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: scale(1.02);
+    background: white;
+    z-index: 10;
+}
+.ranking-item.sortable-ghost {
+    opacity: 0.3;
+}
+
+/* ===================================
+   File upload area
+   =================================== */
+.file-upload-area {
+    border: 2px dashed #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+.file-upload-area:hover {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+.file-upload-area.drag-over {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+.file-upload-area.has-file {
+    border-style: solid;
+    border-color: #dc2626;
+    background-color: #fff;
+    padding: 1rem 1.5rem;
+}
+
+/* ===================================
+   Block appearance animation
+   =================================== */
+@keyframes blockAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.block-appear {
+    animation: blockAppear 0.2s ease-out forwards;
+}
+
+/* ===================================
+   Prose styles (markdown rendered)
+   =================================== */
+.prose h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.75rem; color: #111827; }
+.prose h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.625rem; color: #1f2937; }
+.prose h3 { font-size: 1.1rem; font-weight: 600; margin: 0 0 0.5rem; color: #374151; }
+.prose p { margin: 0 0 0.75rem; color: #4b5563; line-height: 1.65; }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { font-weight: 700; color: #111827; }
+.prose em { font-style: italic; color: #374151; }
+.prose ul { list-style-type: disc; padding-left: 1.25rem; margin: 0 0 0.75rem; }
+.prose ol { list-style-type: decimal; padding-left: 1.25rem; margin: 0 0 0.75rem; }
+.prose li { margin-bottom: 0.25rem; color: #4b5563; }
+.prose code { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; font-family: monospace; }
+.prose blockquote { border-left: 3px solid #dc2626; padding-left: 0.875rem; margin: 0.5rem 0; color: #6b7280; font-style: italic; }
+.prose a { color: #dc2626; text-decoration: underline; }
+.prose hr { border: none; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
+
+/* ===================================
+   Form input style
+   =================================== */
+.form-input {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #111827;
+    background: white;
+    transition: all 0.15s;
+}
+.form-input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-select {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #111827;
+    background: white;
+    cursor: pointer;
+}
+.form-select:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ===================================
+   Results page - Chart containers
+   =================================== */
+.chart-container {
+    position: relative;
+    height: 200px;
+}
+
+/* ===================================
+   Print styles
+   =================================== */
+@media print {
+    nav, .btn-primary, .btn-secondary, #liveIndicator, #liveText {
+        display: none !important;
+    }
+    body {
+        background: white !important;
+    }
+    .bg-white {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+    }
+    .max-w-5xl {
+        max-width: 100% !important;
+    }
+}
