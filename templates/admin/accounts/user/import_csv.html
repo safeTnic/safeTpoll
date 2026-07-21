@@ -1,0 +1,110 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}CSV importieren | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Startseite' %}</a>
+    &rsaquo; <a href="{% url 'admin:auth_user_changelist' %}">Benutzer</a>
+    &rsaquo; CSV importieren
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Benutzer per CSV importieren</h1>
+
+<div style="max-width: 680px;">
+
+    <!-- Upload form -->
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:24px; margin-bottom:24px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="margin-bottom:16px;">
+                <label for="csv_file" style="display:block; font-weight:bold; margin-bottom:6px;">
+                    CSV-Datei auswählen
+                </label>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv"
+                       style="display:block; margin-bottom:4px;">
+                <p style="color:#666; font-size:13px; margin:4px 0 0;">
+                    Nur .csv-Dateien. Zeichenkodierung: UTF-8 oder Latin-1.
+                </p>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <input type="submit" value="Importieren"
+                       class="default"
+                       style="padding:8px 16px; cursor:pointer;">
+                <a href="{% url 'admin:accounts_user_csv_template' %}"
+                   style="font-size:13px; color:#447e9b; text-decoration:none;">
+                    ↓ Vorlage herunterladen (.csv)
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Format documentation -->
+    <div style="background:#f8f8f8; border:1px solid #ddd; border-radius:4px; padding:20px;">
+        <h2 style="margin-top:0; font-size:15px;">Spaltenformat</h2>
+        <p style="font-size:13px; color:#444; margin-bottom:12px;">
+            Die erste Zeile muss die Spaltennamen enthalten (Groß-/Kleinschreibung egal).
+            Trennzeichen: Komma <code>,</code>
+        </p>
+
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+                <tr style="background:#ddd;">
+                    <th style="padding:6px 10px; text-align:left; border:1px solid #ccc;">Spalte</th>
+                    <th style="padding:6px 10px; text-align:left; border:1px solid #ccc;">Pflicht</th>
+                    <th style="padding:6px 10px; text-align:left; border:1px solid #ccc;">Beschreibung</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:6px 10px; border:1px solid #ddd;"><code>benutzername</code></td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Ja</td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Eindeutiger Login-Name</td>
+                </tr>
+                <tr style="background:#fafafa;">
+                    <td style="padding:6px 10px; border:1px solid #ddd;"><code>vorname</code></td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Nein</td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Vorname</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 10px; border:1px solid #ddd;"><code>nachname</code></td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Nein</td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Nachname</td>
+                </tr>
+                <tr style="background:#fafafa;">
+                    <td style="padding:6px 10px; border:1px solid #ddd;"><code>email</code></td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Nein</td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">E-Mail-Adresse</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 10px; border:1px solid #ddd;"><code>passwort</code></td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Ja</td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Passwort (wird sicher gespeichert)</td>
+                </tr>
+                <tr style="background:#fafafa;">
+                    <td style="padding:6px 10px; border:1px solid #ddd;"><code>poll_ersteller</code></td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">Nein</td>
+                    <td style="padding:6px 10px; border:1px solid #ddd;">
+                        <code>ja</code> / <code>nein</code> &mdash;
+                        Darf der Nutzer Polls erstellen?
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="font-size:14px; margin-top:18px; margin-bottom:6px;">Beispiel</h3>
+        <pre style="background:#eee; padding:10px; border-radius:3px; font-size:12px; overflow-x:auto;">benutzername,vorname,nachname,email,passwort,poll_ersteller
+max.muster,Max,Muster,max.muster@firma.de,Passwort123!,ja
+erika.mustermann,Erika,Mustermann,erika@firma.de,Sicher456!,nein</pre>
+
+        <p style="font-size:12px; color:#888; margin-bottom:0; margin-top:12px;">
+            Bereits existierende Benutzernamen werden übersprungen.
+            Englische Spaltennamen (<code>username</code>, <code>first_name</code> usw.) werden ebenfalls akzeptiert.
+        </p>
+    </div>
+
+</div>
+{% endblock %}
