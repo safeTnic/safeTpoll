@@ -109,6 +109,15 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 90  # 3 months
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
 
+# Email (SMTP)
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@localhost')
+
 # Production security settings (HTTPS only when explicitly enabled via env)
 _force_https = os.environ.get('FORCE_HTTPS', 'False') == 'True'
 if not DEBUG:

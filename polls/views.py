@@ -4,7 +4,9 @@ import mimetypes
 from datetime import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.mail import send_mail
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_protect
@@ -22,6 +24,9 @@ from .forms import UserTeamsSettingsForm
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
+
+def can_create_polls(user):
+    return user.is_superuser or user.groups.filter(name='Poll Creators').exists()
 
 def get_blocks_json(poll):
     """Return all blocks of a poll as a serializable list."""
@@ -264,7 +269,10 @@ def dashboard(request):
             'poll': poll,
             'response_count': poll.total_responses(),
         })
-    return render(request, 'polls/dashboard.html', {'poll_data': poll_data})
+    return render(request, 'polls/dashboard.html', {
+        'poll_data': poll_data,
+        'user_can_create_polls': can_create_polls(request.user),
+    })
 
 
 @login_required
@@ -301,6 +309,9 @@ def poll_pin_toggle(request, poll_id):
 @login_required
 @require_POST
 def poll_create(request):
+    if not can_create_polls(request.user):
+        messages.error(request, 'Sie haben keine Berechtigung, Umfragen zu erstellen.')
+        return redirect('dashboard')
     title = request.POST.get('title', '').strip()
     if not title:
         messages.error(request, 'Bitte geben Sie einen Titel ein.')
@@ -1185,6 +1196,84 @@ def poll_submit(request, poll_id):
         response_obj.current_page = current_page + 1
         response_obj.save()
         return JsonResponse({'completed': False, 'next_page': current_page + 1})
+
+
+# ---------------------------------------------------------------------------
+# Email reminder
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def poll_remind(request, poll_id):
+    poll = get_object_or_404(Poll, id=poll_id, creator=request.user)
+
+    voted_user_ids = set(
+        PollResponse.objects.filter(poll=poll, completed=True)
+        .values_list('user_id', flat=True)
+    )
+    non_voters = (
+        User.objects.filter(is_active=True)
+        .exclude(id__in=voted_user_ids)
+        .exclude(id=request.user.id)
+        .exclude(email='')
+        .order_by('last_name', 'first_name', 'username')
+    )
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({'error': 'Ungültige Daten.'}, status=400)
+
+        recipient_ids = data.get('recipient_ids')
+        if recipient_ids:
+            recipients = list(non_voters.filter(id__in=recipient_ids))
+        else:
+            recipients = list(non_voters)
+
+        if not recipients:
+            return JsonResponse({'error': 'Keine Empfänger ausgewählt.'}, status=400)
+
+        poll_url = request.build_absolute_uri(f'/tool/{poll.get_url_id()}/')
+        sent_count = 0
+        failed_emails = []
+
+        for user in recipients:
+            try:
+                send_mail(
+                    subject=f'Erinnerung: Bitte nehmen Sie an der Umfrage teil – {poll.title}',
+                    message=(
+                        f'Hallo {user.get_full_name() or user.username},\n\n'
+                        f'Sie haben noch nicht an der folgenden Umfrage teilgenommen:\n\n'
+                        f'» {poll.title} «\n\n'
+                        f'Bitte nehmen Sie hier teil:\n{poll_url}\n\n'
+                        f'Mit freundlichen Grüßen\n'
+                        f'{request.user.get_full_name() or request.user.username}'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                sent_count += 1
+            except Exception:
+                failed_emails.append(user.email)
+
+        return JsonResponse({
+            'status': 'ok',
+            'sent': sent_count,
+            'failed': failed_emails,
+        })
+
+    return JsonResponse({
+        'non_voters': [
+            {
+                'id': u.id,
+                'name': u.get_full_name() or u.username,
+                'email': u.email,
+            }
+            for u in non_voters
+        ]
+    })
 
 
 # ---------------------------------------------------------------------------

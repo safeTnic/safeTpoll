@@ -12,7 +12,9 @@
       "Bash(python3 -c ' *)",
       "Bash(python -m py_compile config/settings.py config/asgi.py config/urls.py polls/models.py polls/views.py polls/consumers.py polls/forms.py polls/admin.py polls/templatetags/poll_filters.py accounts/views.py)",
       "Bash(python -m py_compile \"c:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\\\\config\\\\settings.py\")",
-      "Bash(powershell -Command '& { $null = [System.Management.Automation.Language.Parser]::ParseFile\\('\\\\''c:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\\\\setup.ps1'\\\\'', [ref]$null, [ref]$null\\); Write-Host '\\\\''Syntax OK'\\\\'' }')"
+      "Bash(powershell -Command '& { $null = [System.Management.Automation.Language.Parser]::ParseFile\\('\\\\''c:\\\\Users\\\\nicolas.regel\\\\Documents\\\\safeTpoll\\\\setup.ps1'\\\\'', [ref]$null, [ref]$null\\); Write-Host '\\\\''Syntax OK'\\\\'' }')",
+      "Bash(cd /c/Users/nicolas.regel/Documents/safeTpoll && find . -type f -name \"*.json\" -o -name \"*.md\" -o -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" | head -50)",
+      "Read(//c/c/Users/nicolas.regel/Documents/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\nicolas.regel\\Documents\\safeTpoll"

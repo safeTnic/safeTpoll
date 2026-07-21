@@ -356,6 +356,78 @@
         </div>
     </div>
 
+    <!-- Email reminder section -->
+    <div class="mt-8 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <button id="reminderToggle"
+                onclick="ReminderApp.toggle()"
+                class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Erinnerung per E-Mail senden
+            </h3>
+            <svg id="reminderChevron" class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+
+        <div id="reminderSection" class="hidden border-t border-gray-100">
+            <div class="px-6 py-5">
+                <!-- Loading state -->
+                <div id="reminderLoading" class="py-6 text-center text-sm text-gray-400">
+                    <svg class="w-5 h-5 animate-spin mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Lade Nicht-Abstimmer...
+                </div>
+
+                <!-- Non-voters list -->
+                <div id="reminderContent" class="hidden">
+                    <!-- Select all + header -->
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer select-none text-sm font-medium text-gray-700">
+                            <input type="checkbox" id="selectAllNonVoters"
+                                   onchange="ReminderApp.toggleAll(this.checked)"
+                                   class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            Alle auswählen
+                        </label>
+                        <span id="nonVoterCount" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full"></span>
+                    </div>
+
+                    <!-- User list -->
+                    <div id="nonVoterList" class="space-y-1 max-h-64 overflow-y-auto mb-4 border border-gray-100 rounded-lg">
+                    </div>
+
+                    <!-- Send button + status -->
+                    <div class="flex items-center gap-3 pt-2">
+                        <button onclick="ReminderApp.send()"
+                                class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white
+                                       text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Erinnerung senden
+                        </button>
+                        <span id="reminderStatus" class="text-sm text-gray-500"></span>
+                    </div>
+                </div>
+
+                <!-- All voted -->
+                <div id="reminderAllVoted" class="hidden py-4 text-center">
+                    <svg class="w-8 h-8 text-green-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-sm text-gray-500">Alle Mitarbeiter haben bereits abgestimmt.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Teams export (if configured) -->
     {% if teams_configured %}
     <div class="mt-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -404,8 +476,111 @@
     const POLL_ID = {{ poll.id }};
     const RESULTS_DATA_URL = "{% url 'poll_results_data' poll.id %}";
     const TEAMS_EXPORT_URL = "{% url 'teams_export' poll.id %}";
+    const REMIND_URL = "{% url 'poll_remind' poll.id %}";
     const CSRF_TOKEN = "{{ csrf_token }}";
     const INITIAL_RESULTS = {{ results|json_encode }};
 </script>
 <script src="{% static 'js/results.js' %}"></script>
+<script>
+const ReminderApp = {
+    loaded: false,
+
+    async toggle() {
+        const section = document.getElementById('reminderSection');
+        const chevron = document.getElementById('reminderChevron');
+        const isHidden = section.classList.contains('hidden');
+        section.classList.toggle('hidden', !isHidden);
+        chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+        if (isHidden && !this.loaded) {
+            await this.load();
+        }
+    },
+
+    async load() {
+        const loading = document.getElementById('reminderLoading');
+        const content = document.getElementById('reminderContent');
+        const allVoted = document.getElementById('reminderAllVoted');
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+        allVoted.classList.add('hidden');
+
+        try {
+            const resp = await fetch(REMIND_URL, {
+                headers: { 'X-CSRFToken': CSRF_TOKEN },
+            });
+            const data = await resp.json();
+            loading.classList.add('hidden');
+
+            if (!data.non_voters || data.non_voters.length === 0) {
+                allVoted.classList.remove('hidden');
+            } else {
+                this.renderList(data.non_voters);
+                content.classList.remove('hidden');
+                this.loaded = true;
+            }
+        } catch (e) {
+            loading.innerHTML = '<p class="text-sm text-red-500">Fehler beim Laden der Daten.</p>';
+        }
+    },
+
+    renderList(nonVoters) {
+        const list = document.getElementById('nonVoterList');
+        const count = document.getElementById('nonVoterCount');
+        count.textContent = `${nonVoters.length} ausstehend`;
+        list.innerHTML = nonVoters.map(u => `
+            <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer select-none">
+                <input type="checkbox" name="non_voter" value="${u.id}" checked
+                       class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                <div class="min-w-0 flex-1">
+                    <span class="text-sm font-medium text-gray-800">${u.name}</span>
+                    <span class="text-xs text-gray-400 ml-2">${u.email}</span>
+                </div>
+            </label>
+        `).join('');
+    },
+
+    toggleAll(checked) {
+        document.querySelectorAll('input[name="non_voter"]').forEach(cb => cb.checked = checked);
+    },
+
+    async send() {
+        const checked = [...document.querySelectorAll('input[name="non_voter"]:checked')];
+        if (checked.length === 0) {
+            document.getElementById('reminderStatus').textContent = 'Bitte mindestens einen Empfänger auswählen.';
+            return;
+        }
+        const recipientIds = checked.map(cb => parseInt(cb.value));
+        const status = document.getElementById('reminderStatus');
+        status.textContent = 'Sende...';
+
+        try {
+            const resp = await fetch(REMIND_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
+                body: JSON.stringify({ recipient_ids: recipientIds }),
+            });
+            const data = await resp.json();
+            if (data.status === 'ok') {
+                let msg = `${data.sent} Erinnerung${data.sent !== 1 ? 'en' : ''} gesendet.`;
+                if (data.failed && data.failed.length > 0) {
+                    msg += ` Fehlgeschlagen: ${data.failed.join(', ')}`;
+                }
+                status.textContent = msg;
+                status.className = 'text-sm text-green-600';
+                this.loaded = false;
+                setTimeout(() => this.load(), 1000);
+            } else {
+                status.textContent = data.error || 'Unbekannter Fehler.';
+                status.className = 'text-sm text-red-500';
+            }
+        } catch (e) {
+            status.textContent = 'Netzwerkfehler beim Senden.';
+            status.className = 'text-sm text-red-500';
+        }
+    },
+};
+</script>
 {% endblock %}
