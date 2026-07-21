@@ -3,6 +3,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-production-abc123xyz')
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -112,6 +115,7 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = _force_https
     SESSION_COOKIE_SECURE = _force_https
     CSRF_COOKIE_SECURE = _force_https
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     if _force_https:
         SECURE_HSTS_SECONDS = 31536000
         SECURE_HSTS_INCLUDE_SUBDOMAINS = True

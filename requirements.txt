@@ -8,3 +8,4 @@ msal>=1.26
 whitenoise>=6.6
 gunicorn>=21.0
 daphne>=4.0
+python-dotenv>=1.0
